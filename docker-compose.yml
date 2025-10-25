@@ -1,0 +1,60 @@
+# docker-compose.yml
+
+services:
+  # 🗄️ Base de données MySQL
+  mysql_nestjs_api_001:
+    image: mysql:8.0
+    container_name: mysql_nestjs_api_001
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345678
+      MYSQL_DATABASE: nestjs_api_001_db
+      MYSQL_USER: nestjs_api_001_user
+      MYSQL_PASSWORD: 12345678
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'mysqladmin',
+          'ping',
+          '-h',
+          'localhost',
+          '-u',
+          'nestjs_api_001_user',
+          '-p12345678',
+        ]
+      interval: 5s
+      retries: 10
+
+  # 🖥️ Service API NestJS
+  nestjs_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev # on utilisera un stage spécial pour le dev
+    image: nestjs_api_001_image
+    container_name: nestjs_api
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_HOST=mysql_nestjs_api_001
+      - DATABASE_URL=mysql://root:12345678@mysql_nestjs_api_001:3306/nestjs_api_001_db
+    volumes:
+      - ./src:/app/src # 🔁 code source monté
+      - ./prisma:/app/prisma # 🔁 schéma Prisma monté
+      - ./package.json:/app/package.json
+      - /app/node_modules # 🧩 évite les conflits node_modules host/container
+    depends_on:
+      mysql_nestjs_api_001:
+        condition: service_healthy
+    command: ['/app/docker-entrypoint.sh']
+
+volumes:
+  mysql_data:
