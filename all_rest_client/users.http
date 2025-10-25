@@ -1,5 +1,5 @@
 @baseUrl =http://localhost:3001
-@id = 8158e01d-6b61-4130-8e6f-fbe9e474f7d7
+@id = d0bdd140-4e9f-4dc6-b78d-9f818f55aeb7
 
 ### GET ALL USERS
 GET {{baseUrl}}/users
